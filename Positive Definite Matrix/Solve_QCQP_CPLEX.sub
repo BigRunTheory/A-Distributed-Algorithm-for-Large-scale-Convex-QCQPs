@@ -1,0 +1,35 @@
+#!/bin/sh -l
+# FILENAME:  Solve_QCQP_CPLEX.sub
+#PBS -l epilogue=/home/chen885/epilogue.sh
+
+cd $PBS_O_WORKDIR
+
+module --force purge
+module load intel
+module load impi
+module use ~glentner/public/modulefiles
+module load monitor/develop
+module load cplex/12.8.0
+module list
+
+# start memory resource monitor
+monitor cpu memory --csv | head -1 >${PBS_JOBNAME}.${PBS_JOBID}.memory.csv
+mpiexec -machinefile <(sort -u $PBS_NODEFILE) \
+	monitor cpu memory --csv --no-header \
+	>>${PBS_JOBNAME}.${PBS_JOBID}.memory.csv &
+MEM_PID=$!
+
+# start cpu resource monitor
+monitor cpu percent --all-cores --csv | head -1 >${PBS_JOBNAME}.${PBS_JOBID}.cores.csv
+mpiexec -machinefile <(sort -u $PBS_NODEFILE) \
+	monitor cpu percent --all-cores --csv --no-header \
+	>>${PBS_JOBNAME}.${PBS_JOBID}.cores.csv &
+CPU_PID=$!
+
+./Solve_QCQP_CPLEX
+
+# wait 10  minutes
+sleep 600
+
+# stop resource monitors
+kill -s INT $MEM_PID $CPU_PID
