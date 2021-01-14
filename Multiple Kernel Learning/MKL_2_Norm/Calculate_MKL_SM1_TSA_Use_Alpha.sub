@@ -1,0 +1,16 @@
+#!/bin/bash -l
+# FILENAME:  Calculate_MKL_SM1_TSA_Use_Alpha.sub
+#SBATCH --exclusive
+#SBATCH --time=00:20:00
+#SBATCH -A standby
+
+cd $SLURM_SUBMIT_DIR
+
+module --force purge
+module load intel
+module list
+
+./Calculate_MKL_SM1_TSA_Use_Alpha
+
+
+

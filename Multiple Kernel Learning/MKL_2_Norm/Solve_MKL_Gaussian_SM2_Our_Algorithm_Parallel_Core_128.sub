@@ -1,0 +1,33 @@
+#!/bin/bash -l
+# FILENAME:  Solve_MKL_Gaussian_SM2_Our_Algorithm_Parallel_Core_128.sub
+#SBATCH --ntasks=133
+#SBATCH --cpus-per-task=1
+#SBATCH --nodes=7
+#SBATCH --ntasks-per-node=19
+#SBATCH --exclusive
+#SBATCH --time=04:00:00
+#SBATCH -A standby
+
+cd $SLURM_SUBMIT_DIR
+
+module --force purge
+module load intel
+module load impi
+module load utilities monitor
+module list
+
+# start memory resource monitor
+monitor cpu memory --csv | head -1 >${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv
+mpiexec -machinefile <(srun hostname | sort -u) \
+	monitor cpu memory --csv --no-header \
+	>>${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv &
+MEM_PID=$!
+
+mpirun -bootstrap slurm -n 133 ./Solve_MKL_Gaussian_SM2_Our_Algorithm_Parallel_Core_128
+
+# wait 10  minutes
+sleep 600
+
+# stop resource monitors
+kill -s INT $MEM_PID #$CPU_PID
+
