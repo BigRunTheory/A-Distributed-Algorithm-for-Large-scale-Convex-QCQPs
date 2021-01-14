@@ -1,8 +1,0 @@
-#!/bin/sh -l
-# FILENAME:  Generate_QCQP_By_Condition_Number.sub
-#PBS -l epilogue=/home/chen885/epilogue.sh
-
-cd $PBS_O_WORKDIR
-
-./Generate_QCQP_By_Condition_Number
-
