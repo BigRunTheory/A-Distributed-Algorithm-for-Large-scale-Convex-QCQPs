@@ -1,0 +1,49 @@
+#!/bin/bash -l
+# FILENAME:  Solve_QCQP_Our_Algorithm_Parallel_Core_16.sub
+#SBATCH --ntasks=17
+#SBATCH --cpus-per-task=1
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=17
+#SBATCH --exclusive
+#SBATCH --time=04:00:00
+#SBATCH -A standby
+
+cd $SLURM_SUBMIT_DIR
+
+module --force purge
+module load intel
+module load impi
+module load utilities monitor
+module list
+
+# start memory resource monitor
+monitor cpu memory --csv | head -1 >${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv
+mpiexec -machinefile <(srun hostname | sort -u) \
+	monitor cpu memory --csv --no-header \
+	>>${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv &
+MEM_PID=$!
+
+# Method 1:
+# export I_MPI_PROCESS_MANAGER=mpd
+# mpirun -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+
+# Method 2:
+mpirun -bootstrap slurm -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+
+# Method 3:
+# mpiexec.hydra -bootstrap slurm -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+
+# Method 4:
+# export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
+# srun -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+
+# Method 5:
+# export I_MPI_DEBUG=5
+# srun --cpu-bind=ldoms --mpi=pmi2 -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+# srun --cpu-bind=ldoms --mpi=pmi2 -n 17 ./Solve_QCQP_Our_Algorithm_Parallel_Core_16
+
+# wait 10  minutes
+sleep 600
+
+# stop resource monitors
+kill -s INT $MEM_PID
