@@ -1,0 +1,40 @@
+#!/bin/bash -l
+# FILENAME:  Solve_QCQP_CPLEX.sub
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --exclusive
+#SBATCH --time=12:00:00
+#SBATCH -A liu334
+
+cd $SLURM_SUBMIT_DIR
+
+module --force purge
+module load intel
+module load impi
+module load utilities monitor
+module load cplex/12.8.0
+module list
+
+# start memory resource monitor
+monitor cpu memory --csv | head -1 >${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv
+mpiexec -machinefile <(srun hostname | sort -u) \
+	monitor cpu memory --csv --no-header \
+	>>${SLURM_JOB_NAME}.${SLURM_JOB_ID}.memory.csv &
+MEM_PID=$!
+
+# start cpu resource monitor
+# monitor cpu percent --all-cores --csv | head -1 >${SLURM_JOB_NAME}.${SLURM_JOB_ID}.cores.csv
+# mpiexec -machinefile <(srun hostname | sort -u) \
+# 	 monitor cpu percent --all-cores --csv --no-header \
+# 	 >>${SLURM_JOB_NAME}.${SLURM_JOB_ID}.cores.csv &
+# CPU_PID=$!
+
+./Solve_QCQP_CPLEX
+
+# wait 10  minutes
+sleep 600
+
+# stop resource monitors
+kill -s INT $MEM_PID #$CPU_PID
