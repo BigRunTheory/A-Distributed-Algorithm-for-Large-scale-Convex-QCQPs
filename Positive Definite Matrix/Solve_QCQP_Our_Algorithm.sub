@@ -1,7 +1,0 @@
-#!/bin/sh -l
-# FILENAME:  Solve_QCQP_Our_Algorithm.sub
-#PBS -l epilogue=/home/chen885/epilogue.sh
-
-cd $PBS_O_WORKDIR
-
-./Solve_QCQP_Our_Algorithm
